@@ -21,7 +21,7 @@ classifiers = [
 dependencies = [
     # Pipeline L0 -> L9
     "google-genai",              # L3, L5: Vision-LLM (Gemini)
-    "PyMuPDF>=1.24.3",                 # L0, L1: splitting, rendering, text density
+    "PyMuPDF>=2.1",                 # L0, L1: splitting, rendering, text density
     "opencv-python-headless",    # L2: scanned-page preprocessing
     "numpy",
     "python-dateutil",           # L6: date normalisation
