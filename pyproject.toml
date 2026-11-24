@@ -39,7 +39,7 @@ dependencies = [
     "uvicorn[standard]",
     "python-multipart",          # PDF upload and OAuth2 form
     "PyJWT",                     # session tokens
-    "bcrypt>=4.0",               # password hashing
+    "bcrypt>=5.0.0",               # password hashing
 ]
 
 [project.optional-dependencies]
