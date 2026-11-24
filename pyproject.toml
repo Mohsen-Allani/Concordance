@@ -46,7 +46,7 @@ dependencies = [
 # Local multilingual embeddings used as a semantic veto in L8 (heavy, optional).
 semantic = ["sentence-transformers"]
 dev = [
-    "pytest>=8",
+    "pytest>=9.2.0",
     "pytest-cov",
     "httpx",                     # FastAPI TestClient
     "ruff",
