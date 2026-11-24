@@ -25,7 +25,7 @@ dependencies = [
     "opencv-python-headless",    # L2: scanned-page preprocessing
     "numpy",
     "python-dateutil",           # L6: date normalisation
-    "pydantic>=2",
+    "pydantic>=2.14.4",
     "rapidfuzz",                 # L8: text similarity
     "weasyprint",                # L9: PDF report (needs Pango, see README)
     "jinja2",                    # L9: report templates
