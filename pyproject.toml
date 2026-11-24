@@ -30,7 +30,7 @@ dependencies = [
     "weasyprint",                # L9: PDF report (needs Pango, see README)
     "jinja2",                    # L9: report templates
     # Persistence
-    "SQLAlchemy>=2.0",
+    "SQLAlchemy>=2.1.9",
     "psycopg[binary]",
     "alembic",
     "python-dotenv",
