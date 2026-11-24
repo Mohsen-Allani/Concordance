@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BonLivraisonExtrait",
+  "description": "Extraction d'un Bon de Livraison (BL), reconstitué à partir de TOUTES les pages fournies : assembler les lignes même si elles sont réparties sur plusieurs pages ou présentées dans le désordre.\n\nAucun format n'est garanti. Les libellés, la langue, l'ordre et la présence des colonnes varient d'un émetteur à l'autre ; certains documents n'ont aucun intitulé et ne se lisent que par la position. Identifier chaque information par sa FONCTION dans le document, jamais par la présence d'un mot précis.\n\nMéthode : traiter d'abord le tableau des lignes, puis balayer séparément chaque zone hors tableau — en-tête, cartouche, blocs latéraux, encadrés, bas de page — où les champs scalaires sont souvent isolés, loin de leur libellé.\n\nRègles impératives :\n1. Restituer chaque valeur numérique, monétaire ou de date comme la chaîne brute exactement telle qu'imprimée : ne rien convertir, reformater, compléter ni recalculer. La normalisation et le contrôle arithmétique sont effectués en aval.\n2. Ne jamais calculer, déduire ni recopier une valeur d'un champ vers un autre pour combler un vide. Un champ absent reste null : une valeur manquante est reconstructible en aval, une valeur inventée ne l'est pas et fausse le contrôle.\n3. Utiliser null pour toute information absente, illisible ou dont l'identification est incertaine. L'incertitude se signale par null, jamais par une valeur plausible.\n4. Émettre toutes les clés du schéma, y compris celles valant null.",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": ["string", "null"],
+      "description": "Numéro identifiant CE bon de livraison. Généralement proche du titre ou dans le cartouche d'en-tête, parfois isolé dans un encadré ou en bas de page. Un bon de livraison cite presque toujours le numéro de la commande d'origine à proximité du sien : ne retenir ici que le numéro du document lui-même, celui de la commande allant dans referencesLiees."
+    },
+    "date": {
+      "type": ["string", "null"],
+      "description": "Date d'émission ou de livraison de CE document, le plus souvent à proximité de son numéro. Le format varie : le conserver tel quel. Ne pas confondre avec la date d'un document cité ni avec une date d'impression."
+    },
+    "fournisseur": {
+      "type": "object",
+      "description": "L'ÉMETTEUR de la livraison, celui qui expédie la marchandise. Sur un bon de livraison, il correspond généralement à l'en-tête, au logo ou au bloc d'identité principal du document. Ses informations peuvent être dispersées : nom en en-tête, identifiant fiscal en pied de page.",
+      "properties": {
+        "nom": { "type": ["string", "null"], "description": "Raison sociale, telle qu'imprimée." },
+        "code": { "type": ["string", "null"], "description": "Code interne identifiant cette partie, s'il est mentionné." },
+        "matriculeFiscal": { "type": ["string", "null"], "description": "Identifiant fiscal ou d'immatriculation de l'entreprise, tel qu'imprimé. Les intitulés et les formats varient selon le pays et l'émetteur. Il figure dans le bloc d'identité, mais aussi fréquemment isolé en pied de page : ne l'attribuer à une partie que si le rattachement est explicite ou si la mise en page le rend certain, sinon null." },
+        "adresse": { "type": ["string", "null"], "description": "Adresse postale, fusionnée en une seule chaîne si elle est imprimée sur plusieurs lignes." }
+      },
+      "required": ["nom", "code", "matriculeFiscal", "adresse"]
+    },
+    "client": {
+      "type": "object",
+      "description": "Le DESTINATAIRE de la livraison. Chercher le bloc ou le champ désignant à qui la marchandise est livrée, distinct de l'en-tête de l'émetteur, quel que soit son intitulé. Lorsque le document distingue un destinataire facturé et un lieu de livraison, retenir ici l'entité destinataire et placer le lieu dans l'adresse.",
+      "properties": {
+        "nom": { "type": ["string", "null"], "description": "Raison sociale, telle qu'imprimée." },
+        "code": { "type": ["string", "null"], "description": "Code client attribué par l'émetteur, s'il est mentionné." },
+        "matriculeFiscal": { "type": ["string", "null"], "description": "Identifiant fiscal ou d'immatriculation, tel qu'imprimé. Souvent relégué en pied de page ou dans une mention légale, éloigné du nom : le rattacher à cette partie uniquement si la mise en page le permet sans ambiguïté." },
+        "adresse": { "type": ["string", "null"], "description": "Adresse de livraison, fusionnée en une seule chaîne." }
+      },
+      "required": ["nom", "code", "matriculeFiscal", "adresse"]
+    },
+    "referencesLiees": {
+      "type": "object",
+      "description": "Références aux documents que ce bon de livraison cite, indispensables au rapprochement. Elles figurent rarement dans un champ dédié : chercher dans le cartouche d'en-tête, dans une mention placée au-dessus du tableau, à l'intérieur du texte des désignations, ou en bas de page. Ne renseigner un numéro que si le document indique clairement à quel type de document il renvoie ; en cas d'ambiguïté, laisser null plutôt que de rattacher un numéro au mauvais champ.",
+      "properties": {
+        "numeroBC": { "type": ["string", "null"], "description": "Numéro du bon de commande auquel cette livraison se rapporte. Peut être partiel, abrégé ou recopié à la main." },
+        "dateBC": { "type": ["string", "null"], "description": "Date du bon de commande cité, si elle accompagne le numéro." }
+      },
+      "required": ["numeroBC", "dateBC"]
+    },
+    "devise": {
+      "type": ["string", "null"],
+      "description": "Devise, uniquement si elle est explicitement imprimée. Ne rien inférer du pays, de la langue ou du format des montants."
+    },
+    "lignes": {
+      "type": "array",
+      "description": "Une entrée par produit réellement livré, dans l'ordre d'impression. Un bon de livraison n'imprime le plus souvent que des désignations et des quantités, sans information de prix — mais ce n'est pas systématique : renseigner les champs monétaires uniquement s'ils sont réellement imprimés. Exclure tout ce qui n'est pas un produit : intitulés de colonnes, sous-totaux, ruptures de section, reports de page, mentions de bas de tableau. Un produit dont la description se poursuit sur plusieurs lignes imprimées, ou d'une page à l'autre, forme une seule entrée.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": ["string", "null"],
+            "description": "Code article identifiant le produit dans ce document, généralement dans une colonne dédiée. Ne pas y placer un numéro d'ordre de ligne, un code de rubrique, ni une quantité. null si le document ne désigne les produits que par leur libellé."
+          },
+          "referencesDansDesignation": {
+            "type": "array",
+            "description": "Codes secondaires figurant à l'intérieur du texte de la désignation plutôt que dans une colonne dédiée (référence du fabricant, code alternatif, renvoi à un autre document). Ces codes constituent souvent le seul pont fiable lorsque la référence principale diffère d'un document à l'autre pour le même produit : capturer tout ce qui a la forme d'un identifiant, même si son rôle est incertain. Tableau vide si aucun.",
+            "items": { "type": "string" }
+          },
+          "designation": {
+            "type": ["string", "null"],
+            "description": "Libellé complet du produit, reconstitué en une seule chaîne si l'impression le répartit sur plusieurs lignes. Conserver tous les qualificatifs distinctifs (dimensions, couleur, matière, indice, conditionnement, variante) : ils servent au rapprochement entre documents en aval."
+          },
+          "unite": {
+            "type": ["string", "null"],
+            "description": "Unité de mesure ou de conditionnement, telle qu'abrégée. Elle peut occuper une colonne dédiée ou être accolée à la quantité ; dans ce second cas, la séparer de la quantité."
+          },
+          "quantite": {
+            "type": ["string", "null"],
+            "description": "Quantité livrée, brute telle qu'imprimée, ponctuation d'origine conservée. Si plusieurs colonnes de quantité coexistent (commandée, livrée, restant à livrer, colisage), retenir la quantité effectivement livrée, qui est la fonction de ce document."
+          },
+          "prixUnitaireHT": {
+            "type": ["string", "null"],
+            "description": "Prix unitaire hors taxe, uniquement s'il est réellement imprimé sur ce bon de livraison. Ce champ est le plus souvent absent : laisser null plutôt que de chercher à le déduire d'un montant ou d'un autre document."
+          },
+          "montantHT": {
+            "type": ["string", "null"],
+            "description": "Montant hors taxe de la ligne, uniquement s'il est réellement imprimé. Ne jamais le calculer à partir de la quantité et du prix."
+          }
+        },
+        "required": ["reference", "referencesDansDesignation", "designation", "unite", "quantite", "prixUnitaireHT", "montantHT"]
+      }
+    }
+  },
+  "required": ["numero", "date", "fournisseur", "client", "referencesLiees", "devise", "lignes"]
+}

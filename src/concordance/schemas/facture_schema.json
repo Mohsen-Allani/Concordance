@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FactureExtrait",
+  "description": "Extraction d'une Facture, reconstituée à partir de TOUTES les pages fournies : assembler lignes et totaux même s'ils sont répartis sur plusieurs pages ou présentés dans le désordre.\n\nAucun format n'est garanti. Les libellés, la langue, l'ordre et la présence des colonnes varient d'un émetteur à l'autre ; certains documents n'ont aucun intitulé et ne se lisent que par la position. Identifier chaque information par sa FONCTION dans le document, jamais par la présence d'un mot précis.\n\nMéthode : traiter d'abord le tableau des lignes, puis balayer séparément chaque zone hors tableau — en-tête, cartouche, blocs latéraux, encadrés, bas de page — où les champs scalaires et les totaux sont souvent isolés, loin de leur libellé.\n\nRègles impératives :\n1. Restituer chaque valeur numérique, monétaire ou de date comme la chaîne brute exactement telle qu'imprimée : ne rien convertir, reformater, compléter ni recalculer. La normalisation et le contrôle arithmétique sont effectués en aval.\n2. Ne jamais calculer, déduire ni recopier une valeur d'un champ vers un autre pour combler un vide. Un champ absent reste null : une valeur manquante est reconstructible en aval, une valeur inventée ne l'est pas et fausse le contrôle.\n3. Utiliser null pour toute information absente, illisible ou dont l'identification est incertaine. L'incertitude se signale par null, jamais par une valeur plausible.\n4. Émettre toutes les clés du schéma, y compris celles valant null.",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Numéro identifiant CETTE facture. Généralement proche du titre ou dans le cartouche d'en-tête. Une facture cite fréquemment, à proximité immédiate, les numéros des documents auxquels elle se rapporte : ne retenir ici que le sien, les autres allant dans referencesLiees."
+    },
+    "date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Date d'émission de CETTE facture, le plus souvent à proximité de son numéro. Le format varie : le conserver tel quel. Ne pas confondre avec une date d'échéance, une date de livraison, la date d'un document cité, ou une date d'impression."
+    },
+    "fournisseur": {
+      "type": "object",
+      "description": "L'ÉMETTEUR de la facture, celui qui réclame le paiement. Il correspond généralement à l'en-tête, au logo ou au bloc d'identité principal du document. Ses informations peuvent être dispersées : nom en en-tête, identifiant fiscal et coordonnées bancaires en pied de page.",
+      "properties": {
+        "nom": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Raison sociale, telle qu'imprimée."
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Code interne identifiant cette partie, s'il est mentionné."
+        },
+        "matriculeFiscal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Identifiant fiscal ou d'immatriculation de l'entreprise, tel qu'imprimé. Les intitulés et les formats varient selon le pays et l'émetteur. Il figure dans le bloc d'identité, mais aussi fréquemment isolé en pied de page ou dans une mention légale : ne l'attribuer à une partie que si le rattachement est explicite ou si la mise en page le rend certain, sinon null."
+        },
+        "adresse": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Adresse postale, fusionnée en une seule chaîne si elle est imprimée sur plusieurs lignes."
+        }
+      },
+      "required": [
+        "nom",
+        "code",
+        "matriculeFiscal",
+        "adresse"
+      ]
+    },
+    "client": {
+      "type": "object",
+      "description": "Le DESTINATAIRE de la facture, celui qui doit payer. Chercher le bloc identifiant le facturé, distinct de l'en-tête de l'émetteur : il s'agit souvent d'un second bloc d'adresse, parfois sans intitulé, parfois introduit par une mention de destinataire. Lorsque deux blocs d'identité coexistent sans libellé, celui qui n'est pas associé au logo ni aux coordonnées bancaires est le client. Les identifiants du client sont fréquemment imprimés à l'écart de son nom : les chercher aussi dans le cartouche et en bas de page.",
+      "properties": {
+        "nom": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Raison sociale, telle qu'imprimée."
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Code client attribué par l'émetteur, s'il est mentionné."
+        },
+        "matriculeFiscal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Identifiant fiscal ou d'immatriculation du client, tel qu'imprimé. Souvent placé dans une case du cartouche ou dans une mention légale plutôt qu'à côté du nom : ne le rattacher au client que si la mise en page le permet sans ambiguïté, sinon null."
+        },
+        "adresse": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Adresse du client, fusionnée en une seule chaîne."
+        }
+      },
+      "required": [
+        "nom",
+        "code",
+        "matriculeFiscal",
+        "adresse"
+      ]
+    },
+    "referencesLiees": {
+      "type": "object",
+      "description": "Références aux documents que cette facture cite, indispensables au rapprochement. Elles figurent rarement dans un champ dédié : chercher dans le cartouche d'en-tête, dans une mention placée au-dessus du tableau, à l'intérieur du texte des désignations, ou en bas de page. Une facture peut récapituler plusieurs livraisons : dans ce cas, ne renseigner ces champs que si une référence unique s'applique à l'ensemble du document, les renvois propres à chaque ligne étant capturés dans referencesDansDesignation. Ne renseigner un numéro que si le document indique clairement à quel type de document il renvoie ; en cas d'ambiguïté, laisser null.",
+      "properties": {
+        "numeroBC": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Numéro du bon de commande auquel cette facture se rapporte."
+        },
+        "dateBC": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Date du bon de commande cité, si elle accompagne le numéro."
+        },
+        "numeroBL": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Numéro du bon de livraison auquel cette facture se rapporte."
+        },
+        "dateBL": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Date du bon de livraison cité, si elle accompagne le numéro."
+        }
+      },
+      "required": [
+        "numeroBC",
+        "dateBC",
+        "numeroBL",
+        "dateBL"
+      ]
+    },
+    "devise": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Devise, uniquement si elle est explicitement imprimée (symbole, code, ou mention dans un intitulé de colonne ou de total). Ne rien inférer du pays, de la langue ou du format des montants."
+    },
+    "lignes": {
+      "type": "array",
+      "description": "Une entrée par produit facturé, dans l'ordre d'impression. La disposition des colonnes varie : certaines sont absentes, fusionnées, ou dépourvues d'intitulé et identifiables seulement par la nature de leur contenu. Exclure tout ce qui n'est pas un produit : intitulés de colonnes, sous-totaux, ruptures de section, reports de page, mentions de bas de tableau. Un produit dont la description se poursuit sur plusieurs lignes imprimées, ou d'une page à l'autre, forme une seule entrée.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Code article identifiant le produit dans ce document, généralement dans une colonne dédiée. Il peut différer du code employé par les autres documents pour le même produit. Ne pas y placer un numéro d'ordre de ligne, un code de rubrique, ni une quantité."
+          },
+          "referencesDansDesignation": {
+            "type": "array",
+            "description": "Codes secondaires figurant à l'intérieur du texte de la désignation plutôt que dans une colonne dédiée (référence du fabricant, code alternatif, renvoi à un bon de livraison ou de commande). Ces codes constituent souvent le seul pont fiable lorsque la référence principale diffère d'un document à l'autre pour le même produit : capturer tout ce qui a la forme d'un identifiant, même si son rôle est incertain. Tableau vide si aucun.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "designation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Libellé complet du produit, reconstitué en une seule chaîne si l'impression le répartit sur plusieurs lignes. Conserver tous les qualificatifs distinctifs (dimensions, couleur, matière, indice, conditionnement, variante) : ils servent au rapprochement entre documents en aval."
+          },
+          "unite": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Unité de mesure ou de conditionnement, telle qu'abrégée. Elle peut occuper une colonne dédiée ou être accolée à la quantité ; dans ce second cas, la séparer de la quantité."
+          },
+          "quantite": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Quantité facturée, brute telle qu'imprimée, ponctuation d'origine conservée : le séparateur décimal et le séparateur de milliers varient d'un document à l'autre et ne doivent pas être interprétés ici."
+          },
+          "prixUnitaireHT": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Prix unitaire hors taxe, brut. Ne jamais le calculer à partir du montant et de la quantité. Lorsque le document imprime à la fois un prix hors taxe et un prix toutes taxes, retenir ici le prix hors taxe."
+          },
+          "tauxRemise": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Taux de remise propre à cette ligne, sous quelque forme qu'il apparaisse (colonne dédiée, pourcentage accolé au libellé, mention distincte). Reporter le taux, non le montant de la remise. null si aucune remise n'est imprimée pour cette ligne : ne pas déduire une remise de l'écart entre le prix et le montant, cette déduction est faite en aval."
+          },
+          "montantHT": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Montant hors taxe de la ligne, tel qu'imprimé. Ne jamais le recalculer ni le corriger, même s'il paraît incohérent : l'incohérence est un signal exploité en aval. Lorsqu'une remise s'applique, ce montant est en général déjà net de remise et ne vaut donc pas quantité × prix unitaire."
+          },
+          "tauxTVA": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Taux de TVA propre à cette ligne, uniquement s'il est imprimé au niveau de la ligne. null si le document n'indique qu'un taux global."
+          }
+        },
+        "required": [
+          "reference",
+          "referencesDansDesignation",
+          "designation",
+          "unite",
+          "quantite",
+          "prixUnitaireHT",
+          "tauxRemise",
+          "montantHT",
+          "tauxTVA"
+        ]
+      }
+    },
+    "totaux": {
+      "type": "object",
+      "description": "Bloc de synthèse du document, généralement en pied de tableau ou dans un encadré, parfois réparti sur deux zones ou reporté sur la dernière page. Les documents n'affichent ni les mêmes lignes, ni le même ordre, ni les mêmes libellés. Renseigner chaque champ selon sa fonction dans le calcul, et non selon son intitulé. Laisser null tout total non imprimé : ne jamais reporter une même valeur dans deux champs différents pour remplir le bloc, et ne jamais calculer un total absent — la reconstruction est faite en aval, à partir des lignes.",
+      "properties": {
+        "totalHT": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Total hors taxe des lignes, AVANT toute remise globale. Règle de partage avec netHT : si le document n'imprime qu'un seul total hors taxe, le placer ici et laisser netHT à null ; s'il en imprime deux (avant et après remise globale), placer le premier ici et le second dans netHT."
+        },
+        "remiseTotale": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Montant de la remise globale appliquée à l'ensemble du document, distincte des remises de ligne. Reporter le montant ; si seul un pourcentage de remise globale est imprimé sans montant correspondant, laisser null."
+        },
+        "netHT": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Base hors taxe après remise globale, c'est-à-dire le montant sur lequel les taxes sont assises. À ne renseigner que si le document imprime effectivement un second total hors taxe, distinct du premier. Si un seul total hors taxe figure sur le document, ce champ reste null."
+        },
+        "tauxTVA": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Taux de TVA global, uniquement si un taux unique s'applique à l'ensemble du document. Si le document ventile la TVA par taux, laisser null ici et renseigner les taux au niveau des lignes."
+        },
+        "montantTVA": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Montant total de la TVA. Si le document présente une ventilation par taux, reporter ici le total de la ventilation ; s'il n'imprime que le détail sans total, laisser null."
+        },
+        "timbreFiscal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Droit de timbre ou frais fixe ajouté après la TVA, lorsqu'il figure sur une ligne distincte."
+        },
+        "totalTTC": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Total toutes taxes comprises. Si le document n'affiche qu'un seul montant final, le placer ici et laisser netAPayer à null."
+        },
+        "netAPayer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Montant final effectivement réclamé, uniquement lorsqu'il est imprimé distinctement du total TTC et en diffère (acompte, retenue, arrondi, report). C'est en général le montant le plus mis en valeur du bloc, mais sa seule mise en forme ne suffit pas à le distinguer : ne le renseigner que s'il constitue bien un second montant final."
+        }
+      },
+      "required": [
+        "totalHT",
+        "remiseTotale",
+        "netHT",
+        "tauxTVA",
+        "montantTVA",
+        "timbreFiscal",
+        "totalTTC",
+        "netAPayer"
+      ]
+    }
+  },
+  "required": [
+    "numero",
+    "date",
+    "fournisseur",
+    "client",
+    "referencesLiees",
+    "devise",
+    "lignes",
+    "totaux"
+  ]
+}

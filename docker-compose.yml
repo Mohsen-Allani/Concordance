@@ -1,0 +1,36 @@
+# Local deployment: web application + PostgreSQL.
+#   1. cp .env.example .env   and set SECRET_KEY and GEMINI_API_KEY
+#   2. docker compose up --build
+#   3. docker compose exec app concordance create-user "Your Name" you@example.com
+# The application is then available on http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: concordance
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-concordance}
+      POSTGRES_DB: concordance
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U concordance"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://concordance:${POSTGRES_PASSWORD:-concordance}@db:5432/concordance
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - appdata:/app/data
+
+volumes:
+  pgdata:
+  appdata:

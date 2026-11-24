@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>{{ titre }}</title></head>
+<body>
+{% set sec = namespace(n=0) %}
+
+<header class="masthead">
+  <div>
+    <h1>{{ titre }}</h1>
+    <p class="sub"><strong>{{ fichier }}</strong> · référence&nbsp;: {{ reference_doc }} · {{ genere_le }}</p>
+  </div>
+  <div class="verdict {{ verdict.css }}">
+    <span class="verdict-label">{{ verdict.label }}</span>
+    <span class="verdict-detail">{{ verdict.detail }}</span>
+  </div>
+</header>
+
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Documents</h2>
+  <table class="grid">
+    <thead><tr>
+      <th>Type</th><th>Numéro</th><th>Date</th>
+      <th class="num">Lignes</th><th>Extraction</th><th class="num">Confiance</th>
+    </tr></thead>
+    <tbody>
+    {% for d in documents %}
+      <tr>
+        <td class="strong">{{ d.type }}</td>
+        <td>{{ d.numero }}</td>
+        <td>{{ d.date }}</td>
+        <td class="num">{{ d.lignes }}</td>
+        <td>{{ d.verdict }}</td>
+        <td class="num">{{ "%.1f%%"|format(d.confiance * 100) if d.confiance is not none else "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="synthese-row">
+  {% for s in synthese %}
+    <div class="synthese-cell">
+      <span class="synthese-paire">{{ s.paire }}</span>
+      {% for c in s.counts %}<span class="chip {{ c.css }}">{{ c.n }}&nbsp;{{ c.label|lower }}</span>{% endfor %}
+    </div>
+  {% endfor %}
+  </div>
+
+  {% if entete %}
+  <table class="grid entete">
+    <tbody>
+    {% for c in entete %}
+      <tr>
+        <td class="nowrap strong">{{ c.nom }}</td>
+        <td class="ctr"><span class="chip {{ c.statut.css }}">{{ c.statut.label }}</span></td>
+        <td>{{ c.message }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+{% if montants %}
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Synthèse des montants{% if montants.devise %} <span class="mut-text">({{ montants.devise }})</span>{% endif %}</h2>
+  <table class="grid montants">
+    <thead><tr>
+      <th>Champ</th>
+      {% for d in montants.docs %}
+        <th class="num">{{ d.type }}<br><span class="sub-th-note">{{ d.numero }} · {{ d.date }}{% if d.lignes is not none %} · {{ d.lignes }} ligne{{ "s" if d.lignes > 1 }}{% endif %}</span></th>
+      {% endfor %}
+      <th class="ctr">Résultat</th>
+    </tr></thead>
+    <tbody>
+    {% for l in montants.lignes %}
+      <tr>
+        <td class="strong">{{ l.label }}</td>
+        {% for c in l.cellules %}<td class="num">{{ c if c is not none else "—" }}</td>{% endfor %}
+        <td class="ctr"><span class="chip {{ l.resultat.css }}">{{ l.resultat.label }}</span></td>
+      </tr>
+    {% endfor %}
+    {% if ecart_net %}
+      <tr class="tot-row">
+        <td colspan="{{ montants.docs|length + 1 }}">Écart net facturé / commandé (lignes rapprochées){% if ecart_net.mention %} — {{ ecart_net.mention }}{% endif %}</td>
+        <td class="ctr">{% if ecart_net.delta %}<span class="chip {{ ecart_net.css }}">{{ ecart_net.delta }}{% if montants.devise %}&nbsp;{{ montants.devise }}{% endif %}</span>{% else %}—{% endif %}</td>
+      </tr>
+    {% endif %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Produits</h2>
+  <table class="grid produits">
+    <thead><tr>
+      <th class="num">#</th><th>Doc</th><th>Référence</th><th>Désignation</th>
+      <th class="num">Qté</th><th>Unité</th><th class="num">PU&nbsp;HT</th>
+      <th class="num">Remise&nbsp;(%)</th><th class="num">Total&nbsp;HT</th>
+      <th class="ctr">Résultat</th>
+    </tr></thead>
+    {% for p in produits %}
+    {% set nb = (p.cellules.values()|select|list|length) + (p.fantomes|length) %}
+    <tbody class="prod">
+      {% set ns = namespace(first=true) %}
+      {% for t in types_presents %}
+        {% set c = p.cellules[t] %}
+        {% if c %}
+        <tr>
+          {% if ns.first %}<td class="num" rowspan="{{ nb }}">{{ p.num }}</td>{% endif %}
+          <td class="strong">{{ t }}</td>
+          <td class="nowrap">{{ c.reference }}</td>
+          <td>{{ c.designation }}{% if c.fusionnee %} <span class="mut-text">(⇄ fusion)</span>{% endif %}</td>
+          <td class="num">{{ c.qte if c.qte is not none else "—" }}</td>
+          <td>{{ c.unite or "—" }}</td>
+          <td class="num">{{ c.pu if c.pu is not none else "—" }}</td>
+          <td class="num">{{ c.remise if c.remise is not none else "—" }}</td>
+          <td class="num">{{ c.montant if c.montant is not none else "—" }}</td>
+          {% if ns.first %}
+          <td class="ctr verdict-cell" rowspan="{{ nb }}">
+            <span class="chip {{ p.statut.css }}">{{ p.statut.label }}</span>
+            {% if paires|length > 1 %}{% for cle in paires_cles %}{% set s = p.paires[cle] %}{% if s %}<br><span class="mut-text">{{ cle.replace("↔", " ↔ ") }}&nbsp;: {{ s.label }}</span>{% endif %}{% endfor %}{% endif %}
+          </td>
+          {% endif %}
+          {% set ns.first = false %}
+        </tr>
+        {% elif p.fantomes.get(t) %}
+        <tr class="ghost">
+          {% if ns.first %}<td class="num" rowspan="{{ nb }}">{{ p.num }}</td>{% endif %}
+          <td class="strong">{{ t }}</td>
+          <td class="mut-text">{{ p.fantomes[t] }}</td>
+          <td class="mut-text" colspan="6">Aucune ligne rapprochée</td>
+          {% if ns.first %}
+          <td class="ctr verdict-cell" rowspan="{{ nb }}"><span class="chip {{ p.statut.css }}">{{ p.statut.label }}</span></td>
+          {% endif %}
+          {% set ns.first = false %}
+        </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    {% endfor %}
+  </table>
+</section>
+
+{% if ecarts %}
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Écarts</h2>
+  {% for e in ecarts %}
+  <div class="anomalie">
+    <p class="anomalie-head">
+      <span class="anomalie-num">{{ e.num }}</span>
+      <span class="anomalie-ref">{{ e.reference }}</span>
+      <span class="anomalie-des">{{ e.designation }}</span>
+    </p>
+    {% for b in e.blocs %}
+    <table class="grid axes">
+      <thead><tr>
+        <th>{{ b.paire }}</th><th class="num">{{ reference_doc }}</th>
+        <th class="num">Comparé</th><th class="num">Écart</th>
+        <th class="num">Tolérance</th><th class="ctr">Statut</th>
+      </tr></thead>
+      <tbody>
+      {% for a in b.axes %}
+        <tr{% if a.statut.cle == "écart" %} class="ligne-ecart"{% endif %}>
+          <td>{{ a.champ }}{% if a.motif %} <span class="mut-text">({{ a.motif }})</span>{% endif %}</td>
+          <td class="num">{{ a.reference if a.reference is not none else "—" }}</td>
+          <td class="num">{{ a.comparee if a.comparee is not none else "—" }}</td>
+          <td class="num">{{ a.ecart if a.ecart is not none else "—" }}</td>
+          <td class="num">{{ a.tolerance if a.tolerance is not none else "—" }}</td>
+          <td class="ctr"><span class="chip {{ a.statut.css }}">{{ a.statut.label }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if b.preuves %}<p class="preuves">Appariement&nbsp;: {{ b.preuves|join(" · ") }}</p>{% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if absents %}
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Lignes non rapprochées</h2>
+  <table class="grid">
+    <thead><tr>
+      <th class="num">#</th><th>Doc</th><th>Référence</th><th>Désignation</th>
+      <th class="num">Qté</th><th>Unité</th><th class="num">PU&nbsp;HT</th>
+      <th class="num">Remise&nbsp;(%)</th><th class="num">Total&nbsp;HT</th>
+      <th class="ctr">Statut</th><th>Constat</th>
+    </tr></thead>
+    <tbody>
+    {% for a in absents %}
+      <tr>
+        <td class="num">{{ a.num }}</td>
+        <td class="strong">{{ a.doc }}</td>
+        <td class="nowrap">{{ a.reference }}</td>
+        <td>{{ a.designation }}</td>
+        <td class="num">{{ a.quantite if a.quantite is not none else "—" }}</td>
+        <td>{{ a.unite or "—" }}</td>
+        <td class="num">{{ a.pu if a.pu is not none else "—" }}</td>
+        <td class="num">{{ a.remise if a.remise is not none else "—" }}</td>
+        <td class="num">{{ a.montant if a.montant is not none else "—" }}</td>
+        <td class="ctr"><span class="chip {{ a.statut.css }}">{{ a.statut.label }}</span></td>
+        <td>{{ a.constat }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if ambiguites %}
+{% set sec.n = sec.n + 1 %}
+<section>
+  <h2>{{ sec.n }}&nbsp;·&nbsp;Appariements à réviser</h2>
+  {% for a in ambiguites %}
+  <div class="anomalie warn-border">
+    <p class="anomalie-head">
+      <span class="anomalie-ref">{{ a.paire }}</span>
+      <span class="anomalie-des">{{ a.motif }}</span>
+    </p>
+    <table class="grid axes">
+      <thead><tr>
+        <th>Document</th><th>Référence</th><th>Désignation</th>
+        <th class="num">Qté</th><th>Unité</th><th class="num">PU&nbsp;HT</th><th class="num">Montant&nbsp;HT</th>
+      </tr></thead>
+      <tbody>
+      {% for l in a.lignes %}
+        <tr{% if loop.first %} class="ligne-ref"{% endif %}>
+          <td class="nowrap strong">{{ l.source }}</td>
+          <td class="nowrap">{{ l.reference }}</td>
+          <td>{{ l.designation }}</td>
+          <td class="num">{{ l.quantite if l.quantite is not none else "—" }}</td>
+          <td>{{ l.unite or "—" }}</td>
+          <td class="num">{{ l.pu if l.pu is not none else "—" }}</td>
+          <td class="num">{{ l.montant if l.montant is not none else "—" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<footer class="colophon">Valeurs reproduites telles qu'imprimées sur les documents sources.</footer>
+
+</body>
+</html>

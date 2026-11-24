@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concordance — Contrôle des documents fournisseurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="login-wrap" id="loginView">
+  <div class="login">
+    <div class="lmark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3h8l4 4v14H8z"/><path d="M4 7h4v14H4z" fill="#fff" fill-opacity=".25"/><path d="m11 13 2 2 4-4"/></svg></div>
+    <div class="logo">Concordance</div>
+    <div class="sub">Contrôle des documents fournisseurs</div>
+    <form id="loginForm">
+      <label for="em">Adresse e-mail</label>
+      <input id="em" type="email" autocomplete="username" required>
+      <label for="pw">Mot de passe</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <div class="login-err" id="loginErr"></div>
+      <button class="btn pri" type="submit">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3h8l4 4v14H8z"/><path d="M4 7h4v14H4z" fill="#fff" fill-opacity=".25"/><path d="m11 13 2 2 4-4"/></svg></div>
+      <div><div class="logo">Concordance</div><div class="sub">Docs fournisseurs</div></div>
+    </div>
+    <nav class="nav">
+      <div class="sec">Menu</div>
+      <a href="#" class="on" data-v="dash">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Tableau de bord</span></a>
+      <a href="#" data-v="hist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span>Historique</span></a>
+      <a href="#" class="cta" data-v="new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Nouvelle analyse</span></a>
+    </nav>
+    <div class="foot"><span>v1.0</span><a href="/api/docs" target="_blank" rel="noopener">API</a></div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <h1 id="topTitle">Tableau de bord</h1>
+      <span class="crumb" id="topCrumb"></span>
+      <span class="spacer"></span>
+      <div class="tuser" id="userBox" title="Se déconnecter">
+        <div class="avatar" id="userAvatar">·</div>
+        <div class="who"><span id="userName">—</span><small id="userRole"></small></div>
+      </div>
+    </header>
+    <div class="content">
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="view on" id="v-dash">
+      <div class="stats" id="statCards"></div>
+      <div class="dash-grid">
+        <div class="card panel">
+          <h3>Activité des 8 dernières semaines</h3>
+          <div class="chart" id="chart"></div>
+          <div class="legend"><span><i style="background:var(--accent)"></i>Analyses</span>
+            <span><i style="background:var(--err)"></i>Avec écarts</span></div>
+        </div>
+        <div class="card panel">
+          <h3>Dernières analyses <a href="#" data-v="hist">Tout voir</a></h3>
+          <ul class="rec" id="recentList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NOUVELLE ANALYSE ============ -->
+    <section class="view" id="v-new">
+      <input type="file" id="fileInput" accept="application/pdf" hidden>
+      <div class="drop" id="dz">
+        <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+        <h2>Déposer le document PDF</h2>
+        <p>Glissez le fichier ici ou <b>parcourez vos dossiers</b></p>
+        <p class="hint">Un seul PDF · BC + BL et/ou Facture · natif ou scanné · 20 Mo max.</p>
+      </div>
+      <div class="card steps" id="pipe" style="display:none">
+        <h3>Analyse en cours</h3>
+        <div class="file" id="pipeFile"></div>
+        <div class="step wait" id="st1"><div class="n">1</div><div class="t"><b>Lecture du document</b><small>Découpage, rendu des pages, prétraitement des scans</small></div></div>
+        <div class="step wait" id="st2"><div class="n">2</div><div class="t"><b>Identification des pages</b><small>Bon de commande, bon de livraison, facture</small></div></div>
+        <div class="step wait" id="st3"><div class="n">3</div><div class="t"><b>Extraction des données</b><small>En-têtes, lignes de produits, totaux</small></div></div>
+        <div class="step wait" id="st4"><div class="n">4</div><div class="t"><b>Contrôle et validation</b><small>Cohérence arithmétique des montants</small></div></div>
+        <div class="step wait" id="st5"><div class="n">5</div><div class="t"><b>Comparaison des documents</b><small>Rapprochement ligne à ligne</small></div></div>
+        <div class="pipe-err" id="pipeErr"></div>
+      </div>
+    </section>
+
+    <!-- ============ RÉSULTATS ============ -->
+    <section class="view" id="v-res">
+      <div id="resBody"></div>
+    </section>
+
+    <!-- ============ HISTORIQUE ============ -->
+    <section class="view" id="v-hist">
+      <div class="filters" id="histFilters">
+        <button class="fpill on" data-f="toutes">Toutes</button>
+        <button class="fpill" data-f="reviser">À réviser</button>
+        <button class="fpill" data-f="ecarts">Avec écarts</button>
+        <button class="fpill" data-f="conformes">Conformes</button>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Fichier</th><th>Documents</th><th>Date</th><th>Statut</th><th style="text-align:right">Confiance</th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="applybar" id="applybar">
+  <span class="msg"><b id="nbEdits">0</b> révision(s) en attente</span>
+  <span class="spacer"></span>
+  <button class="btn" id="btnCancel">Annuler tout</button>
+  <button class="btn pri" id="btnApply">Enregistrer et recalculer</button>
+</div>
+
+<div class="recalc" id="recalc"><div class="box"><div class="sp"></div>Rapprochement rejoué sous vos révisions…</div></div>
+<div class="toast" id="toastEl"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

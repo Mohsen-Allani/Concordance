@@ -1,0 +1,145 @@
+/* Rapport de comparaison — feuille d'impression A4 (WeasyPrint).
+   Encre marine, statuts en vert / orange / rouge sobres. */
+
+@page {
+  size: A4;
+  margin: 15mm 14mm 17mm 14mm;
+  @bottom-left  { content: "UlyTech · Comparaison documentaire";
+                  font: 6.8pt "DejaVu Sans"; color: #99a1b3; }
+  @bottom-right { content: counter(page) " / " counter(pages);
+                  font: 6.8pt "DejaVu Sans"; color: #99a1b3; }
+}
+
+:root {
+  --ink:    #1f3864;
+  --ink-2:  #2e5aa8;
+  --text:   #24303f;
+  --mut:    #6f7787;
+  --line:   #dde3ec;
+  --bg-alt: #f5f7fa;
+
+  --ok:      #17693b;  --ok-bg:   #e7f4ec;
+  --warn:    #a34d07;  --warn-bg: #fdf0df;
+  --err:     #ab241d;  --err-bg:  #fdecea;
+  --mut-bg:  #eef0f4;
+}
+
+* { box-sizing: border-box; }
+body { font: 8.7pt/1.42 "DejaVu Sans", sans-serif; color: var(--text); margin: 0; }
+
+/* ---------- en-tête ---------------------------------------------------- */
+.masthead {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 2pt solid var(--ink);
+  padding-bottom: 8pt; margin-bottom: 13pt;
+}
+.masthead h1 { font-size: 15.5pt; color: var(--ink); margin: 0 0 3pt 0; }
+.masthead .sub { margin: 0; font-size: 8pt; color: var(--mut); }
+.masthead .sub strong { color: var(--text); }
+
+.verdict { min-width: 140pt; padding: 7pt 11pt; border-radius: 3pt; text-align: right; }
+.verdict.ok   { background: var(--ok-bg);   border-right: 3pt solid var(--ok); }
+.verdict.warn { background: var(--warn-bg); border-right: 3pt solid var(--warn); }
+.verdict.err  { background: var(--err-bg);  border-right: 3pt solid var(--err); }
+.verdict-label  { display: block; font-size: 11pt; font-weight: 700; }
+.verdict.ok   .verdict-label { color: var(--ok); }
+.verdict.warn .verdict-label { color: var(--warn); }
+.verdict.err  .verdict-label { color: var(--err); }
+.verdict-detail { display: block; font-size: 7.2pt; color: var(--mut); margin-top: 1pt; }
+
+/* ---------- sections --------------------------------------------------- */
+section { margin-bottom: 14pt; }
+h2 {
+  font-size: 11pt; color: var(--ink);
+  border-bottom: 0.8pt solid var(--line);
+  padding-bottom: 2.5pt; margin: 0 0 7pt 0;
+  break-after: avoid;
+}
+
+/* ---------- tableaux --------------------------------------------------- */
+table.grid { width: 100%; border-collapse: collapse; font-size: 8.3pt; }
+table.grid th {
+  background: var(--ink); color: #fff; font-weight: 600;
+  text-align: left; padding: 3.5pt 6pt; font-size: 7.7pt;
+}
+table.grid th.sub-th { background: var(--ink-2); font-weight: 400; padding-top: 2pt; padding-bottom: 2pt; }
+table.grid th.grp { text-align: center; border-left: 0.6pt solid rgba(255,255,255,.25); }
+table.grid td { padding: 3.2pt 6pt; border-bottom: 0.5pt solid var(--line); vertical-align: top; }
+table.grid tbody tr:nth-child(even) td { background: var(--bg-alt); }
+table.grid tr { break-inside: avoid; }
+
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.ctr, th.ctr { text-align: center; }
+td.strong { font-weight: 600; }
+td.nowrap { white-space: nowrap; }
+.mut-text { color: var(--mut); font-weight: 400; }
+
+table.produits { font-size: 7.6pt; }
+table.produits th { font-size: 7.1pt; }
+table.produits td { padding: 2.8pt 4.5pt; }
+
+table.entete { margin-top: 8pt; }
+table.entete td { font-size: 8pt; }
+
+/* ---------- synthèse --------------------------------------------------- */
+.synthese-row { display: flex; gap: 8pt; margin-top: 8pt; }
+.synthese-cell {
+  flex: 1; padding: 5pt 8pt;
+  background: var(--bg-alt); border-radius: 3pt;
+  border-left: 2.5pt solid var(--ink-2);
+}
+.synthese-paire { display: block; font-weight: 700; color: var(--ink); font-size: 8pt; margin-bottom: 2pt; }
+.synthese-cell .chip { margin-right: 3pt; }
+
+/* ---------- pastilles -------------------------------------------------- */
+.chip {
+  display: inline-block; padding: 0.8pt 5pt; border-radius: 6pt;
+  font-size: 6.8pt; font-weight: 600; white-space: nowrap;
+}
+.chip.ok   { background: var(--ok-bg);   color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.err  { background: var(--err-bg);  color: var(--err); }
+.chip.mut  { background: var(--mut-bg);  color: var(--mut); }
+
+/* ---------- écarts et ambiguïtés --------------------------------------- */
+.anomalie {
+  border: 0.7pt solid var(--line);
+  border-left: 2.5pt solid var(--err);
+  border-radius: 3pt;
+  padding: 7pt 9pt; margin-bottom: 8pt;
+  break-inside: avoid;
+}
+.anomalie.warn-border { border-left-color: var(--warn); }
+.anomalie-head { margin: 0 0 5pt 0; }
+.anomalie-num {
+  display: inline-block; min-width: 14pt; text-align: center;
+  background: var(--ink); color: #fff;
+  border-radius: 2pt; font-size: 7.5pt; font-weight: 700;
+  padding: 1pt 3pt; margin-right: 4pt;
+}
+.anomalie-ref { font-weight: 700; color: var(--ink); }
+.anomalie-des { color: var(--mut); font-size: 8pt; margin-left: 5pt; }
+
+table.axes { margin: 3pt 0; }
+table.axes th { background: var(--ink-2); }
+tr.ligne-ecart td { background: var(--err-bg) !important; }
+tr.ligne-ref td { background: #eaf0fa !important; font-weight: 600; }
+.preuves { font-size: 7.3pt; color: var(--mut); margin: 2pt 0 0 0; font-style: italic; }
+
+/* ---------- pied ------------------------------------------------------- */
+.colophon {
+  margin-top: 14pt; padding-top: 5pt;
+  border-top: 0.5pt solid var(--line);
+  font-size: 7.2pt; color: var(--mut);
+}
+
+/* ---------- synthèse des montants -------------------------------------- */
+table.montants td, table.montants th { padding: 3pt 5pt; }
+.sub-th-note { font-weight: 400; font-size: 6.6pt; color: #c7cede; text-transform: none; }
+tr.tot-row td { background: var(--bg-alt); font-weight: 700; border-top: 1pt solid var(--ink); }
+
+/* ---------- registre des produits -------------------------------------- */
+tbody.prod { break-inside: avoid; }
+tbody.prod > tr:first-child > td { border-top: 1.1pt solid var(--ink-2); }
+tbody.prod tr.ghost td { color: var(--mut); font-style: italic; }
+td.verdict-cell { vertical-align: middle; font-size: 7.4pt; }
