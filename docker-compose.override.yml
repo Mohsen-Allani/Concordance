@@ -1,0 +1,32 @@
+# Mode développement — lu automatiquement par `docker compose up`.
+#
+# Effets :
+#   - le conteneur exécute le code de ./src (votre disque) et non la copie
+#     figée dans l'image : plus besoin de --build après une modification ;
+#   - le serveur redémarre seul à chaque sauvegarde d'un fichier .py ;
+#   - les fichiers de l'interface (HTML/JS/CSS) sont servis directement
+#     depuis ./src : un simple rafraîchissement du navigateur suffit ;
+#   - PostgreSQL est accessible depuis Windows sur localhost:5432
+#     (DBeaver, pgAdmin...), uniquement depuis votre machine.
+#
+# Pour revenir au mode « image figée » (comme en production) :
+#   docker compose -f docker-compose.yml up
+services:
+  app:
+    environment:
+      # ./src passe devant le paquet installé dans l'image
+      PYTHONPATH: /app/src
+      # Docker Desktop sous Windows ne transmet pas toujours les événements
+      # de modification de fichiers : on force la surveillance par sondage
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./src:/app/src
+      - ./migrations:/app/migrations
+      - ./alembic.ini:/app/alembic.ini
+    command: >
+      sh -c "alembic upgrade head &&
+             concordance serve --host 0.0.0.0 --port 8000 --reload"
+
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"

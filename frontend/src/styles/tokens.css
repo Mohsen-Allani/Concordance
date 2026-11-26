@@ -1,0 +1,81 @@
+/* Identité visuelle « Concordance » — v2.
+ * Sarcelle profond (confiance, vérification) + ambre (signal, attention).
+ * Les couleurs vives restent réservées aux statuts : l'œil va aux écarts. */
+:root {
+  /* Encre et surfaces */
+  --ink: #0a1f1c;
+  --ink-2: #12302b;
+  --ink-3: #1b4039;
+  --bg: #f4f7f6;
+  --surface: #ffffff;
+  --surface-2: #f8fbfa;
+  --surface-3: #edf3f1;
+  --border: #e0e8e5;
+  --border-strong: #c7d4cf;
+
+  /* Texte */
+  --text: #0f201d;
+  --text-2: #4a5c57;
+  --text-3: #85948f;
+
+  /* Marque */
+  --primary: #0f766e;
+  --primary-strong: #0b5e57;
+  --primary-bright: #14b8a6;
+  --primary-soft: #e7f5f2;
+  --primary-line: #b3ddd5;
+  --accent: #f59e0b;
+  --accent-strong: #d97706;
+  --accent-soft: #fff6e5;
+  --grad-brand: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --grad-ink: linear-gradient(160deg, #0a1f1c 0%, #12302b 55%, #0f3d36 100%);
+
+  /* Navigation (alias conservés pour les composants) */
+  --nav-bg: var(--ink);
+  --nav-bg-2: var(--ink-2);
+  --nav-text: #a9c2bc;
+  --nav-muted: #5f7c75;
+
+  /* Statuts */
+  --ok: #059669;
+  --ok-soft: #ecfdf5;
+  --ok-line: #a7f3d0;
+  --err: #e11d48;
+  --err-soft: #fff1f3;
+  --err-line: #fecdd6;
+  --warn: #c2700a;
+  --warn-soft: #fffaeb;
+  --warn-line: #fde3a7;
+  --info: var(--primary);
+  --info-soft: var(--primary-soft);
+  --info-line: var(--primary-line);
+  --edit: #7c3aed;
+  --edit-soft: #f5f3ff;
+  --edit-line: #ddd6fe;
+  --muted: #64748b;
+  --muted-soft: #f1f5f4;
+  --muted-line: #d9e2df;
+
+  /* Types de documents */
+  --doc-bc: #1d4ed8;
+  --doc-bl: #0891b2;
+  --doc-fa: #c026d3;
+
+  /* Forme */
+  --radius: 12px;
+  --radius-sm: 9px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 2px rgba(10, 31, 28, 0.05);
+  --shadow: 0 2px 6px rgba(10, 31, 28, 0.05), 0 10px 24px rgba(10, 31, 28, 0.05);
+  --shadow-lg: 0 20px 50px rgba(10, 31, 28, 0.18);
+  --ring: 0 0 0 4px rgba(20, 184, 166, 0.18);
+
+  /* Typographie */
+  --font: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  --topbar-h: 64px;
+  --sidebar-w: 0px;
+  --content-max: 1320px;
+}
